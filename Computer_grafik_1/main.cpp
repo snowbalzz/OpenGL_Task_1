@@ -1,34 +1,16 @@
-///////////////////////////////////////////////////////////////////////
-//                                                                                         //
-// Codeger�st f�r Vorlesung Computergraphik WS 2022/23 �bung 1       //
-//                                                                               //
-///////////////////////////////////////////////////////////////////////
-
-
-// Include-File f�r die Text Ein-/Ausgabe
+//////////////////////////////////////////////// /////////////////////
+// //
+// Code framework for lecture computer graphics WS 2022/23 Exercise 1 //
+// //
+//////////////////////////////////////////////// /////////////////////
+#define GL_SILENCE_DEPRECATION
 #include <iostream>
 using namespace std;
-
-
-// Include-File f�r die GLUT-Library
 #include "glut.h"
+#include "Point.cpp"
+#include "Color.cpp"
 
 
-
-/////////////////////////////////////////////////////////////////////////////////////////
-//
-// Hier wird einiges initialisiert. Sie d�rfen sich gerne den Code anschauen und
-// versuchen ihn zu verstehen. Das sollte Ihnen nicht allzu schwer fallen. Es werden
-// jedoch einige Techniken benutzt (Texturen, ...) die wir in der Vorlesung noch
-// nicht besprochen haben, die wir aber aus techn. Gr�nden hier ben�tigen.
-//
-// Weiter unten finden Sie einen Vermerk, ab dem Sie den Code jedoch vollst�ndig
-// verstehen sollten!!!
-
-
-// Aufl�sungen der gesamten Textur
-// !!!ACHTUNG!!! nicht alle Texturaufl�sungen funktionieren!
-// Stichwort ungef�hr: POT2 Problematik
 #define TEX_RES_X 60
 #define TEX_RES_Y 60
 // Anzahl der Pixel der Textur
@@ -48,9 +30,7 @@ GLuint g_TexID = 0;
 int g_WinWidth = 800;
 int g_WinHeight = 800;
 
-// Funktion organisiert die Textur.
-// K�mmern Sie sich nicht weiter um diese Funktion, da
-// sie momentan nur ein notwendiges �bel darstellt!
+
 void manageTexture ()
 {
     glEnable        (GL_TEXTURE_2D);
@@ -83,40 +63,6 @@ void reshape(int w, int h)
     glutPostRedisplay ();
 }
 
-
-//
-//
-/////////////////////////////////////////////////////////////////////////////////////////
-//
-// Hier f�ngt der f�r Sie wirklich relevante Teil des Programms an.
-//
-
-
-// Eine �beraus primitive Punktklasse
-class Point {
-public:
-
-    Point (int x=0, int y=0) {
-        this->x = x;
-        this->y = y;
-    }
-
-    int x, y;
-};
-
-// Eine �beraus primitive Farbklasse
-class Color {
-public:
-
-    Color (float r=1.0f, float g=1.0f, float b=1.0f) {
-        this->r = r;
-        this->g = g;
-        this->b = b;
-    }
-
-    float r, g, b;
-};
-
 // Funktion l�scht den Bildschirm mit der angegebenen Farbe
 // Usage z.B.: clearImage (Color (1,1,1))
 // l�scht den Bildschirm in Wei�.
@@ -135,6 +81,7 @@ void clearImage (Color c=Color()) {
 // Ohne Farbangabe ist die Standard-Malfarbe Schwarz
 //
 // Nutzen Sie diese Funktion ...
+
 void setPoint (Point p, Color c=Color(0,0,0)) {
     int x = p.x + TEX_HALF_X;
     int y = p.y + TEX_HALF_Y;
@@ -154,65 +101,251 @@ void setPoint (Point p, Color c=Color(0,0,0)) {
 // Diese Funktion soll eine Gerade zwischen den Punkten
 // p1 und p2 in der Farbe c malen. Benutzen Sie die Funktion
 // setPoint um die individuellen Punkte zu zeichnen.
-void bhamLine (Point p1, Point p2, Color c) {
+//My code
 
-    // erster Punkt
-    setPoint (p1, c);
+void bhamLine3 (int x0, int y0, int x1, int y1, Color c) {
+    
+    
 
-    // ...
+    int d, dne, de, f, m1, m2, m3, m4, px, py;
+    
+    
+    px = 0;
+    py = 0;
+    
+    //Simple translation of the line position
+    if( x0 == 0 && x0 == 0){
+        px = 0;
+        py = 0;
+    } else{
+        px = x0;
+        py = y0;
+        x0 =0;
+        y0 =0;
+        x1 = x1 - px;
+        y1 = y1 - py;
+    }
 
-    // letzter Punkt
-    setPoint (p2, c);
+    int dy = y1 - y0;
+    int dx = x1 - x0;
+    
+    //Checking the first flags
+    bool flag1 = (dx>=0);
+    bool flag2 = (dy>=0);
+    bool flag3 = (abs(dy)>=abs(dx));
+
+    
+    ///////
+    ///
+    ///This part of code dose 2 things:
+    /// - Uses the results of flags to determine wher is the line located;
+    /// - Selects the correct Constans for multiplication;
+    ///
+    ///////
+    if(flag1){
+        if(flag2) {
+
+            // x/y
+            m1 = 1;
+            m2 = 1;
+            m3 = 1;
+            m4 = 1;
+
+        } else {
+            // x/-y
+            dx = abs(dx);
+            dy = abs(dy);
+
+            if(flag3){
+                m1 = 1;
+                m2 = 1;
+                m3 = 1;
+                m4 = -1;
+
+            } else {
+                m1 = 1;
+                m2 = -1;
+                m3 = 1;
+                m4 = 1;
+            }
+        }
+    } else{
+        if(flag2) {
+            //-x/y
+            dx = abs(dx);
+            dy = abs(dy);
+
+            if(flag3){
+                m1 = 1;
+                m2 = 1;
+                m3 = -1;
+                m4 = 1;
+            } else {
+                m1 = -1;
+                m2 = 1;
+                m3 = 1;
+                m4 = 1;
+            }
+        } else {
+            //-x/-y
+            m1 = -1;
+            m2 = -1;
+            m3 = -1;
+            m4 = -1;
+        }
+    }
+    
+    //Bellow is the code that only thinks in the first 2 Octants
+    //Its also adjusted to use the selected Constans
+
+    x1 = abs(x1);
+    y1 = abs(y1);
+
+    dy = y1 - y0;
+    dx = x1 - x0;
+
+    flag1 = (dx>=0);
+    flag2 = (dy>=0);
+    flag3 = (abs(dy)>=abs(dx));
+    
+
+    if (flag3) {
+        f = y1;
+        y1 = x1;
+        x1 = f;
+    }
+
+    dy = y1 - y0;
+    dx = x1 - x0;
+    
+    dne = 2 * (dy-dx);
+    de = 2 * dy;
+    d = 2 * dy-dx;
+
+    if (flag1) {
+        if(flag2){
+            if (!flag3) {
+
+                Point xy2(x0 + px, y0 + py);
+                setPoint (xy2, c);
+
+            } else {
+
+                Point xy2(y0 + px, x0 + py);
+                setPoint(xy2,c);
+
+            }
+            while (x0 < x1) {
+
+                if (d >= 0) {
+                    d += dne;
+                    x0++;
+                    y0++;
+
+                } else {
+                    d += de;
+                    x0++;
+                }
+                if (!flag3) {
+
+                    Point xy2(x0 * m1 + px, y0 * m2+ py);
+                    setPoint (xy2, c);
+
+                } else {
+
+                    Point xy2(y0 * m3 + px, x0 * m4 + py);
+                    setPoint(xy2,c);
+
+                }
+            }
+        }
+    }
 }
 
-//
-// �BUNG 1 AUFGABE 2:
-//
-// Diese Funktion soll einen Kreis mit Radius r um den Punkt p
-// malen. Benutzen Sie die Funktion setPoint um die individuellen
-// Punkte zu zeichnen. Vergessen Sie nicht auch den Mittelpunkt zu
-// zeichnen!
-void bhamCircle (Point p, int r, Color c) {
+void plotCircle(int x, int y, int px, int py, Color c){
+    Point xy0(x+px,y+py);
+    setPoint(xy0,c);
 
-    // Mittelpunkt
-    setPoint (p, c);
+    Point xy1(y+px,x+py);
+    setPoint(xy1,c);
 
-    // ...
+    Point xy2(-x+px,y+py);
+    setPoint(xy2,c);
+
+    Point xy3(-y+px,x+py);
+    setPoint(xy3,c);
+
+    Point xy4(x+px,-y+py);
+    setPoint(xy4,c);
+
+    Point xy5(y+px,-x+py);
+    setPoint(xy5,c);
+
+    Point xy6(-x+px,-y+py);
+    setPoint(xy6,c);
+
+    Point xy7(-y+px,-x+py);
+    setPoint(xy7,c);
 }
 
-// Die Callback Funktion die f�r das eigentliche Malen
-// zust�ndig ist. Im Wesentlichen brauchen Sie sich nur
-// um den Bereich zwischen den Kommentaren zu k�mmern,
-// alles andere ist wiederum ein notwendiges �bel!
-void display (void)
-{
-    Color background(0.5,0.5,0.5);    // grauer Hintergrund
-    clearImage(background);                // alte Anzeige l�schen
+void BresenhamCircle(int px, int py, int r, Color c){
+    
+    int x, y, p, d, DSE, DE;
 
+    p = 0;
+    
+    x = p;
+    y = r;
+    d = 5 - 4*r;
+    
+    plotCircle(x, y, px, py, c);
+    
+    while (y>x) {
+
+        if (d>=0)
+        {
+            DSE = 4*(2*(x-y)+5);
+            d += DSE;
+            x++;
+            y--;
+        } // SE
+        else {
+            DE = 4*(2*x+3);
+            d +=DE ;
+            x++;
+        } // E
+        
+        plotCircle(x, y, px, py, c);
+    }
+}
+
+void display (void) {
+    Color background(1,1,1);    // White background
+    clearImage(background);                // Clearing the canvas or the screen
+
+    //Calling the function to draw the line
+    Color cRed(0.5, 0.1, 0.1);
+    Color cGreen(0.1, 0.5, 0.1);
+    Color cBlue(0.1, 0.1, 0.5);
+    Color cBlack(0, 0, 0);
+    
+//    bhamLine3(10, 5, -10, -20, cGreen);
+//
+//    bhamLine3(-10, -20, 5, 10, cRed);
+//
+//    bhamLine3(10, 20, 5, -10, cRed);
+//
+//    bhamLine3(10, 0, -10, 10, cRed);
+
+    BresenhamCircle(0, 0,10,cRed);
+//
+    
+    
     //////////////////////////////////////////////////////////////////
-    //
-    // Hier sollen Ihre Bresenham-Funktionen
-    // eine Gerade und einen Kreis zeichnen.
-    //
-    // Im Prinzip brauchen Sie hier keine �nderungen vorzunehmen,
-    // es sei denn Sie wollen "spielen" :-D
-    //
-
-    Point p1  (-10,  20);                // ersten Punkt f�r Gerade definieren
-    Point p2  ( 20, -15);                // ebenso den zweiten Punkt
-    Color cRed(1,0,0);                    // Es soll eine rote Gerade sein ...
-    bhamLine  (p1, p2, cRed);            // Gerade zeichnen ...
-
-    Point p(-3, -5);                        // Mittelpunkt f�r Kreis definieren
-    int r = 17;                                // Radius festlegen
-    Color cBlue(0,0,1);                    // Es soll ein blauer Kreis sein ...
-    bhamCircle (p, r, cBlue);            // Kreis zeichnen ...
-
-    //
-    // Ab hier sollten Sie nichts mehr �ndern!
-    //
+    ///
+    /// DONT TOUCH THIS!
+    ///
     //////////////////////////////////////////////////////////////////
-
     manageTexture ();
 
     glClear      (GL_COLOR_BUFFER_BIT);
@@ -237,19 +370,20 @@ void display (void)
     glFlush ();
 }
 
-// Die Main-Funktion
+// Main function of the file!
 int main (int argc, char **argv) {
 
     glutInit (&argc, argv);
     glutInitWindowSize (g_WinWidth, g_WinHeight);
     glutCreateWindow ("Main Window");
 
-    glutReshapeFunc (reshape);    // zust�ndig f�r Gr��en�nderungen des Fensters
-    glutDisplayFunc (display);    // zust�ndig f�r das wiederholte Neuzeichnen des Bildschirms
+    glutReshapeFunc (reshape);      // Responsible for resizing the window
+    glutDisplayFunc (display);      // Responsible for repeatedly redrawing the screen
 
     glutMainLoop ();
 
-    glDeleteTextures (1, &g_TexID); // l�scht die oben angelegte Textur
+    glDeleteTextures (1, &g_TexID);     // Deletes the texture created above
 
     return 0;
 }
+
